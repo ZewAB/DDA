@@ -357,5 +357,5 @@ results_miss = DataFrame(
     num_repeats  = n_rep
 )
 println(results_miss)
-CSV.write("results_miss2_$(n)_$(p)_$(arg5)_$(arg6)_$(arg7)_$(arg8)_$(arg9)_$(arg10)_$(n_rep)_$(solver_choice).csv", results_miss)
+CSV.write("results_miss_$(n)_$(p)_$(arg5)_$(arg6)_$(arg7)_$(arg8)_$(arg9)_$(arg10)_$(n_rep)_$(solver_choice).csv", results_miss)
 end
