@@ -166,9 +166,9 @@ maxit=5000
 
 # Main function
 function main(arg1::Float64, arg2::Float64, arg3::Float64, arg4::Float64, arg5::Float64, arg6::Float64, solver_choice::String)
-    lambda1_values = Float64[]
-    lambda2_values = Float64[]
-    lambda3_values = Float64[]
+    α_values = Float64[]
+    λ_values = Float64[]
+    r_values = Float64[]
     total_rmse = 0.0
     total_time = 0.0
 
@@ -293,9 +293,9 @@ end
 
         result = boptimize!(optSCPRSM)
 
-        push!(lambda1_values, result[2][1])
-        push!(lambda2_values, result[2][2])
-        push!(lambda3_values, result[2][3])
+        push!(α_values, result[2][1])
+        push!(λ_values, result[2][2])
+        push!(r_values, result[2][3])
 
         start_time = time()
         
@@ -309,9 +309,9 @@ end
     end
 
     results_IHDP = DataFrame(
-        Mean_α = mean(lambda1_values),
-        Mean_λ  = mean(lambda2_values),
-        Mean_r = mean(lambda3_values),
+        Mean_α = mean(α_values),
+        Mean_λ  = mean(λ_values),
+        Mean_r = mean(r_values),
         Mean_RMSE = total_rmse / 10,
         Mean_Time = total_time / 10,
         Arg1_Lower = arg1,
