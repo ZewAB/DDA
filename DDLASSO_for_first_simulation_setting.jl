@@ -399,5 +399,5 @@ results = DataFrame(
     num_repeats  = n_rep
 )
 println(results)
-CSV.write("results2_$(n)_$(p)_$(C)_$(eps)_$(b_setup)_$(arg5)_$(arg6)_$(arg7)_$(arg8)_$(arg9)_$(arg10)_$(n_rep)_$(sparse_or_dense)_$(solver_choice).csv", results)
+CSV.write("results_$(n)_$(p)_$(C)_$(eps)_$(b_setup)_$(arg5)_$(arg6)_$(arg7)_$(arg8)_$(arg9)_$(arg10)_$(n_rep)_$(sparse_or_dense)_$(solver_choice).csv", results)
 end
