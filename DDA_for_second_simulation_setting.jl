@@ -1,10 +1,10 @@
 # =============================================================================
-# Script: DDLASSO for ATT Estimation for the second simulation setting
+# Script: DDA for ATT Estimation for the second simulation setting
 # Main components:
 # - Weight computation using different solvers
 # - WL1L0-SCPRSM via Proximal Operators
-# - Adaptive learning rate
-# - Bayesian Optimization for tuning (α, λ, r)
+# - Data-adaptive learning rate (γ,δ)
+# - Data-adaptive Bayesian Optimization for tuning (α, λ, r)
 # =============================================================================
 # Load the required packages (if they are not installed, please install them before loading)
 
@@ -134,18 +134,18 @@ maxit=5000
   lam1w = λ*α
   lam2w = λ*(1.0-α)
   gradL = zero(c)
-  hL = LeastSquares(WX, YX) # Loss function L1
-  fL = Translate(hL, v) # Translation function L1
+  hγ = LeastSquares(WX, YX) # Loss function L1
+  fγ = Translate(hL, v) # Translation function L1
   gL = NormL1(lam1w) # Regularization function L1
   l = zero(d)
   l2 = zero(d)
   gradR = zero(d)
-  hR = LeastSquares(WX, YX) # Loss function L2
-  fR = Translate(hR, u) # Translation function L2
-  gR = NormL0(lam2w) # Regularization function L2
+  hR = LeastSquares(WX, YX) # Loss function L0
+  fR = Translate(hR, u) # Translation function L0
+  gR = NormL0(lam2w) # Regularization function L0
   # Initial values for line search
   con = 0.5
-  lrL = 0.9
+  lrL = 0.9 # γ
   lrR = 0.9
   gamL = 0.9
   gamR = 0.9
