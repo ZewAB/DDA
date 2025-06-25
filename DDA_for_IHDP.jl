@@ -98,6 +98,7 @@ function SCPRSM_bo1(α, λ, r, WX, YX, Y, X, balance_target, chi, tau)
   # Regularization weights
   λ₁ = λ * α
   λ₂ = λ * (1.0 - α)
+    
   gradγ = zero(c)
   hγ = LeastSquares(WX, YX)          # Loss function for L1
   fγ = Translate(hγ, v)              # Translated loss
