@@ -1,5 +1,5 @@
 # DDA
-Debiased and data-adaptive estimation of the average treatment effect on the treated (ATT) in high
+Debiased and data-adaptive (DDA) estimation of the average treatment effect on the treated (ATT) in high
 dimensions
 
 
