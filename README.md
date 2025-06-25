@@ -1,14 +1,15 @@
-# DDLASSO
+# DDA
+Debiased and data-adaptive estimation of the average treatment effect on the treated (ATT) in high
+dimensions
 
-Double-debiased LASSO (DDLASSO) for high-dimensional estimation of the average treatment effect on the treated (ATT).
 
 ---
 
-This repository provides code to estimate the ATT using DDLASSO. It includes three separate scripts:
+This repository provides code to estimate the ATT using DDA. It includes three separate scripts:
 
-- DDLASSO for the first simulation setting  
-- DDLASSO for the second simulation setting  
-- DDLASSO for the IHDP dataset
+- DDA for the first simulation setting  
+- DDA for the second simulation setting  
+- DDA for the IHDP dataset
 
 **IHDP dataset source:** [CEVAE GitHub Repository](https://github.com/AMLab-Amsterdam/CEVAE/tree/master/datasets/IHDP)
 
