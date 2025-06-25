@@ -1,10 +1,10 @@
 # =============================================================================
-# Script: DDLASSO for ATT Estimation in the first simulation setting
+# Script: DDA for ATT Estimation in the first simulation setting
 # Main components:
 # - Weight computation using different solvers
 # - WL1L0-SCPRSM via Proximal Operators
-# - Adaptive learning rate
-# - Bayesian Optimization for tuning (α, λ, r)
+#-  Data-adaptive learning rate (γ,δ)
+# - Data-adaptive Bayesian Optimization for tuning (α, λ, r)
 # =============================================================================
 # Load the required packages (if they are not installed, please install them before loading)
 
