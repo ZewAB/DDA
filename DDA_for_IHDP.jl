@@ -77,92 +77,103 @@ end
 
 # The WL1L0-SCPRSM function that will use the optimized hyperparameters
 function SCPRSM_bo1(α, λ, r, WX, YX, Y, X, balance_target, chi, tau)
-covar = cov(WX,YX)
-# Convergence tolerance of SCPRSM
-tol=5e-4
+    # Calculate covariances for inits to SCPRSM
+  covar = cov(WX, YX)
+  # Convergence and iteration parameters
+  # Convergence tolerance of SCPRSM
+  tol = 5e-4
 # Maximum number of SCPRSM iterations
-maxit=5000
-  u = zero(WX[1,:])
-  u = covar[:,1]*0.0001
-  v = zero(WX[1,:])
-  v = covar[:,1]*0.0001
-  uvcurr = zero(WX[1,:])
-  c = zero(WX[1,:])
-  d = zero(WX[1,:])
+  maxit = 5000
+
+  # Initial values
+  u = covar[:, 1] * 0.0001
+  v = covar[:, 1] * 0.0001
+  uvcurr = zero(WX[1, :])
+  c = zero(WX[1, :])
+  d = zero(WX[1, :])
   m = zero(c)
   m2 = zero(c)
-  lam1w = λ*α
-  lam2w = λ*(1.0-α)
-  gradL = zero(c)
-  hL = LeastSquares(WX, YX) # Loss function L1
-  fL = Translate(hL, v) # Translation function L1
-  gL = NormL1(lam1w) # Regularization function L1
   l = zero(d)
   l2 = zero(d)
-  gradR = zero(d)
-  hR = LeastSquares(WX, YX) # Loss function L2
-  fR = Translate(hR, u) # Translation function L2
-  gR = NormL0(lam2w) # Regularization function L2
-  # Initial values for line search
-  con = 0.5
-  lrL = 0.9
-  lrR = 0.9
-  gamL = 0.9
-  gamR = 0.9
-  loss(d) = 0.5*norm(WX*d-YX)^2 # Loss function for line search
+
+  # Regularization weights
+  λ₁ = λ * α
+  λ₂ = λ * (1.0 - α)
+
+  # L1 block (γ)
+  gradγ = zero(c)
+  hγ = LeastSquares(WX, YX)          # Loss function for L1
+  fγ = Translate(hγ, v)              # Translated loss
+  gγ = NormL1(λ₁)                    # Regularization function for L1
+
+  # L0 block (δ)
+  gradδ = zero(d)
+  hδ = LeastSquares(WX, YX)          # Loss function for L0
+  fδ = Translate(hδ, u)              # Translated loss
+  gδ = NormL0(λ₂)                    # # Regularization function for L0
+
+  # Initial values for backtracking line search
+  ℸ = 0.5                            # shrinkage factor
+  γ = 0.9                            # learning rate for L1 
+  δ = 0.9                            # learning rate for L0 
+
+  # Quadratic loss for backtracking
+  loss(x) = 0.5 * norm(WX * x - YX)^2
+
   for it = 1:maxit
-    # Line search L1
-    gradL = WX'*(WX*c-YX)
-    while  loss(u) > (loss(c) + 
-      gradL'*(-c) +
-      (1.0/(2.0*lrL))*norm(-c)^2)
-      lrL = lrL * con
+    # --- Line search for γ (L1) ---
+    gradγ = WX' * (WX * c - YX)
+    while loss(u) > (loss(c) + gradγ' * (-c) + (1.0 / (2.0 * γ)) * norm(-c)^2)
+      γ *= ℸ
     end
-    gamL = lrL
+
     uvcurr = u + v
-    # SCPRSM perform f-update step L1
-    prox!(c, fL, u - m, gamL) 
-    m .+= r*(c - u)
-    # SCPRSM perform g-update step L1
-    prox!(u, gL, c + m, gamL)   
-    # Dual update L1
-    m2 .+= r*(c - u)
-    # Line search L2
-    gradR = WX'*(WX*d-YX)
-    while  loss(v) > (loss(d) +
-      gradR'*(-d) +
-      (1.0/(2.0*lrR))*norm(-d)^2)
-      lrR = lrR * con
+
+    # SCPRSM update L1 block
+    prox!(c, fγ, u - m, γ)
+    m .+= r * (c - u)
+    prox!(u, gγ, c + m, γ)
+    m2 .+= r * (c - u)
+
+    # --- Line search for δ (L0) ---
+    gradδ = WX' * (WX * d - YX)
+    while loss(v) > (loss(d) + gradδ' * (-d) + (1.0 / (2.0 * δ)) * norm(-d)^2)
+      δ *= ℸ
     end
-    gamR = lrR
-    # SCPRSM perform f-update step L2
-    prox!(d, fR, v - l, gamR) 
-    l .+= r*(d - v)
-    # SCPRSM perform g-update step L2
-    prox!(v, gR, d + l, gamR) 
-    # Stopping criterion for SCPRSM
+
+    # SCPRSM update L0 block
+    prox!(d, fδ, v - l, δ)
+    l .+= r * (d - v)
+    prox!(v, gδ, d + l, δ)
+
+    # Stopping criterion
     dualres = (u + v) - uvcurr
-    reldualres = dualres/(norm(((u + v) + uvcurr)/2))
+    reldualres = dualres / norm(((u + v) + uvcurr) / 2)
     if it % 5 == 2 && (norm(reldualres) <= tol)
       break
     end
-    # Dual update L2
-    l2 .+= r*(d - v)
+
+    # Dual update L0
+    l2 .+= r * (d - v)
   end
-    #  beta.hat = u+v
-    l1l0_fit = u+v # lasol0_fit
-    mu_l1l0 = reshape(balance_target, 1, length(balance_target))*(u+v)
-    residuals = YX - WX*(u+v)
-    mu_residual = sum(chi .* residuals)
-    mu_hat = mu_l1l0 .+ mu_residual
-    var_hat = sum(chi .^2 .* residuals .^2) *
-    # degrees of freedom correction
-    length(chi) / max(1, length(chi) - sum(l1l0_fit .!= 0))
-    eta1 = mean(Y[X .== 1])
-    tau_hat = eta1 .- mu_hat
-    rmse = sqrt(mean((tau_hat .- tau).^2)) # RMSE
- return rmse
-    end
+
+  # Compute prediction and treatment effect
+  l1l0_fit = u + v
+  mu_l1l0 = reshape(balance_target, 1, length(balance_target)) * l1l0_fit
+  residuals = YX - WX * l1l0_fit
+  mu_residual = sum(chi .* residuals)
+  mu_hat = mu_l1l0 .+ mu_residual
+
+  var_hat = sum(chi .^ 2 .* residuals .^ 2) *
+            length(chi) / max(1, length(chi) - sum(l1l0_fit .!= 0))
+
+  eta1 = mean(Y[X .== 1])
+  tau_hat = eta1 .- mu_hat
+  rmse = sqrt(mean((tau_hat .- tau).^2)) # RMSE
+
+  return rmse
+end
+
 
 # Main function
 function main(arg1::Float64, arg2::Float64, arg3::Float64, arg4::Float64, arg5::Float64, arg6::Float64, solver_choice::String)
@@ -190,95 +201,99 @@ function main(arg1::Float64, arg2::Float64, arg3::Float64, arg4::Float64, arg5::
         chi = optimize_chi(WX, balance_target, 0.5, solver_choice)
 
 # The WL1L0-SCPRSM function for BO
-SCPRSM_bo(par::Vector) = SCPRSM_bo(par[1],par[2],par[3])
-function SCPRSM_bo(par1,par2,par3)
-covar = cov(WX,YX)
-# Convergence tolerance of SCPRSM
-tol=5e-4
-# Maximum number of SCPRSM iterations
-maxit=5000
-  α = par1
-  λ = par2
-  r = par3
-  u = zero(WX[1,:])
-  u = covar[:,1]*0.0001
-  v = zero(WX[1,:])
-  v = covar[:,1]*0.0001
-  uvcurr = zero(WX[1,:])
-  c = zero(WX[1,:])
-  d = zero(WX[1,:])
+SCPRSM_bo(par::Vector) = SCPRSM_bo(par[1], par[2], par[3])
+
+function SCPRSM_bo(α, λ, r)
+  covar = cov(WX, YX)
+
+  # Convergence tolerance and max iterations
+  tol = 5e-4
+  maxit = 5000
+
+  # Initialize primal and dual variables
+  u = covar[:, 1] * 1e-4
+  v = covar[:, 1] * 1e-4
+  uvcurr = zero(WX[1, :])
+  c = zero(WX[1, :])
+  d = zero(WX[1, :])
   m = zero(c)
   m2 = zero(c)
-  lam1w = λ*α
-  lam2w = λ*(1.0-α)
-  gradL = zero(c)
-  hL = LeastSquares(WX, YX) # Loss function L1
-  fL = Translate(hL, v) # Translation function L1
-  gL = NormL1(lam1w) # Regularization function L1
   l = zero(d)
   l2 = zero(d)
-  gradR = zero(d)
-  hR = LeastSquares(WX, YX) # Loss function L2
-  fR = Translate(hR, u) # Translation function L2
-  gR = NormL0(lam2w) # Regularization function L2
-  # Initial values for line search
-  con = 0.5
-  lrL = 0.9
-  lrR = 0.9
-  gamL = 0.9
-  gamR = 0.9
-  loss(d) = 0.5*norm(WX*d-YX)^2 # Loss function for line search
+
+  # Regularization parameters
+  λ₁ = λ * α
+  λ₂ = λ * (1.0 - α)
+
+  # L1 block (γ)
+  gradγ = zero(c)
+  hγ = LeastSquares(WX, YX)
+  fγ = Translate(hγ, v)
+  gγ = NormL1(λ₁)
+
+  # L0 block (δ)
+  gradδ = zero(d)
+  hδ = LeastSquares(WX, YX)
+  fδ = Translate(hδ, u)
+  gδ = NormL0(λ₂)
+
+ # Initial values for backtracking line search
+  ℸ = 0.5 
+  γ = 0.9
+  δ = 0.9
+
+  # Loss function for line search
+  loss(x) = 0.5 * norm(WX * x - YX)^2
+
   for it = 1:maxit
-    # Line search L1
-    gradL = WX'*(WX*c-YX)
-    while  loss(u) > (loss(c) + 
-      gradL'*(-c) +
-      (1.0/(2.0*lrL))*norm(-c)^2)
-      lrL = lrL * con
+    # --- Line search for γ (L1 block) ---
+    gradγ = WX' * (WX * c - YX)
+    while loss(u) > (loss(c) + gradγ' * (-c) + (1.0 / (2.0 * γ)) * norm(-c)^2)
+      γ *= ℸ
     end
-    gamL = lrL
+
     uvcurr = u + v
-    # SCPRSM perform f-update step L1
-    prox!(c, fL, u - m, gamL) 
-    m .+= r*(c - u)
-    # SPRSM perform g-update step L1
-    prox!(u, gL, c + m, gamL)    
-    # Dual update L1
-    m2 .+= r*(c - u)
-    # Line search L2
-    gradR = WX'*(WX*d-YX)
-    while  loss(v) > (loss(d) +
-      gradR'*(-d) +
-      (1.0/(2.0*lrR))*norm(-d)^2)
-      lrR = lrR * con
+
+    # L1 block updates
+    prox!(c, fγ, u - m, γ)
+    m .+= r * (c - u)
+    prox!(u, gγ, c + m, γ)
+    m2 .+= r * (c - u)
+
+    # --- Line search for δ (L0 block) ---
+    gradδ = WX' * (WX * d - YX)
+    while loss(v) > (loss(d) + gradδ' * (-d) + (1.0 / (2.0 * δ)) * norm(-d)^2)
+      δ *= ℸ
     end
-    gamR = lrR
-    # SCPRSM perform f-update step L2
-    prox!(d, fR, v - l, gamR)  
-    l .+= r*(d - v)
-    # SCPRSM perform g-update step L2
-    prox!(v, gR, d + l, gamR) 
-    # Stopping criterion for SCPRSM
+
+    # L0 block updates
+    prox!(d, fδ, v - l, δ)
+    l .+= r * (d - v)
+    prox!(v, gδ, d + l, δ)
+
+    # Stopping criterion
     dualres = (u + v) - uvcurr
-    reldualres = dualres/(norm(((u + v) + uvcurr)/2))
-    if it % 5 == 2 && (norm(reldualres) <= tol)
+    reldualres = dualres / norm(((u + v) + uvcurr) / 2)
+    if it % 5 == 2 && norm(reldualres) <= tol
       break
     end
-    # Dual update L2
-    l2 .+= r*(d - v)
+
+    # Dual update L0
+    l2 .+= r * (d - v)
   end
-    #  beta.hat = u+v
-    l1l0_fit = u+v
-    mu_l1l0 = reshape(balance_target, 1, length(balance_target))*(u+v)
-    residuals = YX - WX*(u+v)
-    mu_residual = sum(chi .* residuals)
-    mu_hat = mu_l1l0 .+ mu_residual
-    eta1 = mean(Y[X .== 1])
-     tau_hat = eta1 .- mu_hat
+
+  # Post-processing for causal effect estimation
+  l1l0_fit = u + v
+  mu_l1l0 = reshape(balance_target, 1, length(balance_target)) * l1l0_fit
+  residuals = YX - WX * l1l0_fit
+  mu_residual = sum(chi .* residuals)
+  mu_hat = mu_l1l0 .+ mu_residual
+  eta1 = mean(Y[X .== 1])
+  tau_hat = eta1 .- mu_hat
+
   rmse = sqrt(mean((tau_hat .- tau).^2))
   return rmse
 end
-
 
         modeloptimizer = MAPGPOptimizer(every=30, noisebounds=[-1., 10.],
             kernbounds=[[-3., -3., -3, 0.], [6., 8., 8., 8.]], maxeval=40)
