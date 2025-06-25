@@ -4,7 +4,7 @@
 # - Weight computation using different solvers
 # - WL1L0-SCPRSM via Proximal Operators
 #-  Data-adaptive learning rate (γ,δ)
-# - Data-adaptive Bayesian Optimization for tuning (α, λ, r)
+# - Data-adaptive Bayesian Optimization (BO) for tuning (α, λ, r)
 # =============================================================================
 # Load the required packages (if they are not installed, please install them before loading)
 
@@ -21,11 +21,11 @@ using MosekTools
 using DelimitedFiles
 using DataFrames, CSV
 using COPT, COSMO
-function main(n, p, C, eps, b_setup, arg5, arg6, arg7, arg8, arg9, arg10, n_rep, sparse_or_dense, solver_choice)
+function main(n, p, C, eps, b_setup, arg1, arg2, arg3, arg4, arg5, arg6, n_rep, sparse_or_dense, solver_choice)
     println("Number of observations = ", n, ", Number of predictors = ", p, ", Scaling factor for b = ", C)
     println("Treatment probability = ", eps)
     println("b setup = ", b_setup)
-    println("Lower and upper bounds for α, λ, and r in BO,resp.: ", arg5, ", ", arg6, ", ", arg7, ", ", arg8, ", ", arg9, ", ", arg10)
+    println("Lower and upper bounds for α, λ, and r in BO,resp.: ", arg1, ", ", arg2, ", ", arg3, ", ", arg4, ", ", arg5, ", ", arg6)
     println("Simulation replications: ", n_rep)
     if sparse_or_dense == 1
         println("sparse or dense: sparse")
@@ -258,7 +258,7 @@ end
 
     optSCPRSM = BOpt(par -> SCPRSM_bo(par[1], par[2], par[3]), model, 
         UpperConfidenceBound(), modeloptimizer,
-        [arg5, arg6, arg7], [arg8, arg9, arg10], repetitions=4, maxiterations=250,
+        [arg1, arg2, arg3], [arg4, arg5, arg6], repetitions=4, maxiterations=250,
         sense=Min,
     verbosity=Silent)
 
@@ -346,7 +346,7 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
     l2 .+= r * (d - v)
   end
 
-  # Compute prediction and treatment effect
+  # Estimate tau and return RMSE
   l1l0_fit = u + v
   mu_l1l0 = reshape(balance_target2, 1, length(balance_target2)) * l1l0_fit
   residuals = YX2 - WX2 * l1l0_fit
@@ -398,12 +398,12 @@ println("Mean_RMSE: ", mean(rmses))
 # Write summary results to a CSV file    
 results = DataFrame(
     Mean_RMSE = mean(rmses),
+    Arg1 = arg1, 
+    Arg2 = arg2, 
+    Arg3 = arg3,
+    Arg4 = arg4, 
     Arg5 = arg5, 
-    Arg6 = arg6, 
-    Arg7 = arg7,
-    Arg8 = arg8, 
-    Arg9 = arg9, 
-    Arg10 = arg10,
+    Arg6 = arg6,
     alp = reSCPRSMbo[2][1],
     lambda = reSCPRSMbo[2][2],
     r = reSCPRSMbo[2][3],
@@ -414,5 +414,5 @@ results = DataFrame(
     num_repeats  = n_rep
 )
 println(results)
-CSV.write("results_$(n)_$(p)_$(C)_$(eps)_$(b_setup)_$(arg5)_$(arg6)_$(arg7)_$(arg8)_$(arg9)_$(arg10)_$(n_rep)_$(sparse_or_dense)_$(solver_choice).csv", results)
+CSV.write("results_$(n)_$(p)_$(C)_$(eps)_$(b_setup)_$(arg1)_$(arg2)_$(arg3)_$(arg4)_$(arg5)_$(arg6)_$(n_rep)_$(sparse_or_dense)_$(solver_choice).csv", results)
 end
