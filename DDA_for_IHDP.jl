@@ -77,9 +77,8 @@ end
 
 # The WL1L0-SCPRSM function that will use the optimized hyperparameters
 function SCPRSM_bo1(α, λ, r, WX, YX, Y, X, balance_target, chi, tau)
-    # Calculate covariances for inits to SCPRSM
+# Calculate covariances for inits to SCPRSM
   covar = cov(WX, YX)
-  # Convergence and iteration parameters
   # Convergence tolerance of SCPRSM
   tol = 5e-4
 # Maximum number of SCPRSM iterations
@@ -107,39 +106,40 @@ function SCPRSM_bo1(α, λ, r, WX, YX, Y, X, balance_target, chi, tau)
   gradδ = zero(d)
   hδ = LeastSquares(WX, YX)          # Loss function for L0
   fδ = Translate(hδ, u)              # Translated loss
-  gδ = NormL0(λ₂)                    # # Regularization function for L0
+  gδ = NormL0(λ₂)                    # Regularization function for L0
 
   # Initial values for backtracking line search
   ℸ = 0.5                            # shrinkage factor
   γ = 0.9                            # learning rate for L1 
   δ = 0.9                            # learning rate for L0 
 
-  # Quadratic loss for backtracking
+  # Loss function for line search
   loss(x) = 0.5 * norm(WX * x - YX)^2
 
   for it = 1:maxit
-    # --- Line search for γ (L1) ---
+    # Line search for γ 
     gradγ = WX' * (WX * c - YX)
     while loss(u) > (loss(c) + gradγ' * (-c) + (1.0 / (2.0 * γ)) * norm(-c)^2)
       γ *= ℸ
     end
-
     uvcurr = u + v
-
-    # SCPRSM update L1 block
+    # SCPRSM update L1 
     prox!(c, fγ, u - m, γ)
+    # First dual update L1 
     m .+= r * (c - u)
     prox!(u, gγ, c + m, γ)
+    # Second dual update L1 
     m2 .+= r * (c - u)
 
-    # --- Line search for δ (L0) ---
+    # Line search for δ 
     gradδ = WX' * (WX * d - YX)
     while loss(v) > (loss(d) + gradδ' * (-d) + (1.0 / (2.0 * δ)) * norm(-d)^2)
       δ *= ℸ
     end
 
-    # SCPRSM update L0 block
+    # SCPRSM update L0 
     prox!(d, fδ, v - l, δ)
+    # First dual update L0 
     l .+= r * (d - v)
     prox!(v, gδ, d + l, δ)
 
@@ -150,11 +150,11 @@ function SCPRSM_bo1(α, λ, r, WX, YX, Y, X, balance_target, chi, tau)
       break
     end
 
-    # Dual update L0
+     # Second dual update L0 
     l2 .+= r * (d - v)
   end
 
-  # Compute prediction and treatment effect
+  # Estimate tau and return RMSE
   l1l0_fit = u + v
   mu_l1l0 = reshape(balance_target, 1, length(balance_target)) * l1l0_fit
   residuals = YX - WX * l1l0_fit
@@ -170,7 +170,6 @@ function SCPRSM_bo1(α, λ, r, WX, YX, Y, X, balance_target, chi, tau)
 
   return rmse
 end
-
 
 # Main function
 function main(arg1::Float64, arg2::Float64, arg3::Float64, arg4::Float64, arg5::Float64, arg6::Float64, solver_choice::String)
@@ -202,14 +201,13 @@ SCPRSM_bo(par::Vector) = SCPRSM_bo(par[1], par[2], par[3])
 
 function SCPRSM_bo(α, λ, r)
   covar = cov(WX, YX)
-
   # Convergence tolerance and max iterations
   tol = 5e-4
   maxit = 5000
 
   # Initialize primal and dual variables
-  u = covar[:, 1] * 1e-4
-  v = covar[:, 1] * 1e-4
+  u = covar[:, 1] * 0.0001
+  v = covar[:, 1] * 0.0001
   uvcurr = zero(WX[1, :])
   c = zero(WX[1, :])
   d = zero(WX[1, :])
@@ -222,13 +220,11 @@ function SCPRSM_bo(α, λ, r)
   λ₁ = λ * α
   λ₂ = λ * (1.0 - α)
 
-  # L1 block (γ)
   gradγ = zero(c)
   hγ = LeastSquares(WX, YX)
   fγ = Translate(hγ, v)
   gγ = NormL1(λ₁)
 
-  # L0 block (δ)
   gradδ = zero(d)
   hδ = LeastSquares(WX, YX)
   fδ = Translate(hδ, u)
@@ -243,7 +239,7 @@ function SCPRSM_bo(α, λ, r)
   loss(x) = 0.5 * norm(WX * x - YX)^2
 
   for it = 1:maxit
-    # --- Line search for γ (L1 block) ---
+    # Line search for γ 
     gradγ = WX' * (WX * c - YX)
     while loss(u) > (loss(c) + gradγ' * (-c) + (1.0 / (2.0 * γ)) * norm(-c)^2)
       γ *= ℸ
@@ -251,20 +247,23 @@ function SCPRSM_bo(α, λ, r)
 
     uvcurr = u + v
 
-    # L1 block updates
+    # L1 updates
     prox!(c, fγ, u - m, γ)
+    # First dual update L1      
     m .+= r * (c - u)
     prox!(u, gγ, c + m, γ)
+    # Second dual update L1
     m2 .+= r * (c - u)
 
-    # --- Line search for δ (L0 block) ---
+    # Line search for δ 
     gradδ = WX' * (WX * d - YX)
     while loss(v) > (loss(d) + gradδ' * (-d) + (1.0 / (2.0 * δ)) * norm(-d)^2)
       δ *= ℸ
     end
 
-    # L0 block updates
+    # L0 updates
     prox!(d, fδ, v - l, δ)
+    # First dual update L0    
     l .+= r * (d - v)
     prox!(v, gδ, d + l, δ)
 
@@ -275,7 +274,7 @@ function SCPRSM_bo(α, λ, r)
       break
     end
 
-    # Dual update L0
+    # Second dual update L0     
     l2 .+= r * (d - v)
   end
 
