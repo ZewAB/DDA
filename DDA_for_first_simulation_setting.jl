@@ -206,8 +206,10 @@ function SCPRSM_bo(par1, par2, par3)
     uvcurr = u + v
     # SCPRSM L1 updates
     prox!(c, fγ, u - m, γ)
+    # First dual update L1 
     m .+= r * (c - u)
     prox!(u, gγ, c + m, γ)
+    # Second dual update L1 
     m2 .+= r * (c - u)
 
     # Line search: δ 
@@ -218,6 +220,7 @@ function SCPRSM_bo(par1, par2, par3)
 
     # SCPRSM L0 updates
     prox!(d, fδ, v - l, δ)
+    # First dual update L0 
     l .+= r * (d - v)
     prox!(v, gδ, d + l, δ)
 
@@ -228,7 +231,7 @@ function SCPRSM_bo(par1, par2, par3)
       break
     end
 
-    # Dual update L0
+    # Second dual update L0
     l2 .+= r * (d - v)
   end
 
@@ -312,11 +315,12 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
     end
 
     uvcurr = u + v
-
     # SCPRSM updates: L1 block
     prox!(c, fγ, u - m, γ)
+    # First dual update L1 
     m .+= r * (c - u)
     prox!(u, gγ, c + m, γ)
+    # Second dual update L1 
     m2 .+= r * (c - u)
 
     # Line search for δ 
@@ -327,6 +331,7 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
 
     # SCPRSM updates: L0 
     prox!(d, fδ, v - l, δ)
+    # First dual update L0 
     l .+= r * (d - v)
     prox!(v, gδ, d + l, δ)
 
@@ -337,7 +342,7 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
       break
     end
 
-    # Dual update L0
+    # Second dual update L0 
     l2 .+= r * (d - v)
   end
 
