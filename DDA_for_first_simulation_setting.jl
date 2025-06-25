@@ -152,6 +152,7 @@ chi = optimize_chi(WX,balance_target)
    
 SCPRSM_bo(par::Vector) = SCPRSM_bo(par[1], par[2], par[3])
 function SCPRSM_bo(par1, par2, par3)
+# Calculate covariances for inits to SCPRSM
   covar = cov(WX, YX)
   # Convergence tolerance of SCPRSM
   tol = 5e-4
@@ -177,43 +178,39 @@ function SCPRSM_bo(par1, par2, par3)
   # Regularization weights
   λ₁ = λ * α
   λ₂ = λ * (1.0 - α)
-
-  # L1 block (γ)
   gradγ = zero(c)
-  hγ = LeastSquares(WX, YX)
-  fγ = Translate(hγ, v)
-  gγ = NormL1(λ₁)
+  hγ = LeastSquares(WX, YX)  # Loss function for L1
+  fγ = Translate(hγ, v)      # Translated loss
+  gγ = NormL1(λ₁)            # Regularization function for L1
 
-  # L0 block (δ)
   gradδ = zero(d)
-  hδ = LeastSquares(WX, YX)
-  fδ = Translate(hδ, u)
-  gδ = NormL0(λ₂)
+  hδ = LeastSquares(WX, YX)   # Loss function for L0
+  fδ = Translate(hδ, u)       # Translated loss
+  gδ = NormL0(λ₂)             # Regularization function for L0
 
-  # Backtracking parameters
-  ℸ = 0.5
-  γ = 0.9
-  δ = 0.9
+  # Initial values for backtracking line search
+  ℸ = 0.5     # shrinkage factor
+  γ = 0.9     # learning rate for L1 
+  δ = 0.9     # learning rate for L0 
 
   # Loss function
   loss(x) = 0.5 * norm(WX * x - YX)^2
 
   for it = 1:maxit
-    # Line search: γ block
+    # Line search: γ 
     gradγ = WX' * (WX * c - YX)
     while loss(u) > (loss(c) + gradγ' * (-c) + (1 / (2γ)) * norm(-c)^2)
       γ *= ℸ
     end
-
+            
     uvcurr = u + v
-
     # SCPRSM L1 updates
     prox!(c, fγ, u - m, γ)
     m .+= r * (c - u)
     prox!(u, gγ, c + m, γ)
     m2 .+= r * (c - u)
 
-    # Line search: δ block
+    # Line search: δ 
     gradδ = WX' * (WX * d - YX)
     while loss(v) > (loss(d) + gradδ' * (-d) + (1 / (2δ)) * norm(-d)^2)
       δ *= ℸ
@@ -235,7 +232,7 @@ function SCPRSM_bo(par1, par2, par3)
     l2 .+= r * (d - v)
   end
 
-  # Estimate and return RMSE
+  # Estimate tau and return RMSE
   l1l0_fit = u + v
   mu_l1l0 = reshape(balance_target, 1, length(balance_target)) * l1l0_fit
   residuals = YX - WX * l1l0_fit
@@ -274,8 +271,8 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
   maxit = 5000
 
   # Initialization
-  u = covar[:, 1] * 1e-4
-  v = covar[:, 1] * 1e-4
+  u = covar[:, 1] * 0.0001
+  v = covar[:, 1] * 0.0001
   uvcurr = zero(WX2[1, :])
   c = zero(WX2[1, :])
   d = zero(WX2[1, :])
@@ -288,7 +285,6 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
   λ₁ = λ * α
   λ₂ = λ * (1.0 - α)
 
-  # L1 block (γ)
   gradγ = zero(c)
   hγ = LeastSquares(WX2, YX2)
   fγ = Translate(hγ, v)
@@ -300,7 +296,7 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
   fδ = Translate(hδ, u)
   gδ = NormL0(λ₂)
 
-  # Backtracking parameters
+  # Initial values for backtracking line search
   ℸ = 0.5
   γ = 0.9
   δ = 0.9
@@ -323,13 +319,13 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
     prox!(u, gγ, c + m, γ)
     m2 .+= r * (c - u)
 
-    # Line search for δ block
+    # Line search for δ 
     gradδ = WX2' * (WX2 * d - YX2)
     while loss(v) > (loss(d) + gradδ' * (-d) + (1 / (2δ)) * norm(-d)^2)
       δ *= ℸ
     end
 
-    # SCPRSM updates: L0 block
+    # SCPRSM updates: L0 
     prox!(d, fδ, v - l, δ)
     l .+= r * (d - v)
     prox!(v, gδ, d + l, δ)
@@ -345,7 +341,7 @@ function SCPRSM_bo1(α::Float64, λ::Float64, r::Float64, WX2::Matrix{Float64}, 
     l2 .+= r * (d - v)
   end
 
-  # Post-processing
+  # Compute prediction and treatment effect
   l1l0_fit = u + v
   mu_l1l0 = reshape(balance_target2, 1, length(balance_target2)) * l1l0_fit
   residuals = YX2 - WX2 * l1l0_fit
