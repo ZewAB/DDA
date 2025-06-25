@@ -4,7 +4,7 @@
 # - Weight computation using different solvers
 # - WL1L0-SCPRSM via Proximal Operators
 #-  Data-adaptive learning rate (γ,δ)
-# - Data-adaptive Bayesian Optimization for tuning (α, λ, r)
+# - Data-adaptive Bayesian Optimization (BO) for tuning (α, λ, r)
 # =============================================================================
 # Load the required packages (if they are not installed, please install them before loading)
 
@@ -71,7 +71,6 @@ function optimize_chi(M::Matrix{Float64}, balance_target::Vector{Float64}, z::Fl
     if any(chi_sol .< 0)
         error("chi contains invalid (non-positive) values")
     end
-
     return chi_sol
 end
 
@@ -199,7 +198,6 @@ function main(arg1::Float64, arg2::Float64, arg3::Float64, arg4::Float64, arg5::
 
 # The WL1L0-SCPRSM function for BO
 SCPRSM_bo(par::Vector) = SCPRSM_bo(par[1], par[2], par[3])
-
 function SCPRSM_bo(α, λ, r)
   covar = cov(WX, YX)
   # Convergence tolerance and max iterations
@@ -247,7 +245,6 @@ function SCPRSM_bo(α, λ, r)
     end
 
     uvcurr = u + v
-
     # L1 updates
     prox!(c, fγ, u - m, γ)
     # First dual update L1      
@@ -279,7 +276,7 @@ function SCPRSM_bo(α, λ, r)
     l2 .+= r * (d - v)
   end
 
-  # Post-processing for causal effect estimation
+  # Estimate tau and return RMSE
   l1l0_fit = u + v
   mu_l1l0 = reshape(balance_target, 1, length(balance_target)) * l1l0_fit
   residuals = YX - WX * l1l0_fit
