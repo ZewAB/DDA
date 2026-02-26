@@ -17,7 +17,7 @@
 #   3) ihdp_table.tex
 #
 # Run:
-#   JULIA_WORKER_TIMEOUT=300 julia --project=. --bind-to 127.0.0.1 -p 12 DDA_ihdp_parallel.jl
+#   JULIA_WORKER_TIMEOUT=300 julia --project=. --bind-to 127.0.0.1 -p 12 DDA_ihdp.jl
 # =============================================================================
 #
 # Load Distributed first to enable parallel workers
@@ -508,3 +508,4 @@ println("\n--- IHDP ALL RUNS COMPLETE ---")
 println("CSV saved as: ihdp_dda_all_results.csv")
 println("Summary CSV saved as: ihdp_dda_summary.csv")
 println("LaTeX saved as: ihdp_table.tex")
+
