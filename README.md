@@ -21,7 +21,7 @@ The repository includes the following main scripts:
   Second simulation setting.
 
 - **DDA_main_many_cluster.jl**  
-  Simulation under multiple cluster configurations.
+  Simulation under many cluster configurations.
 
 - **DDA_ihdp.jl**  
   Empirical analysis using the IHDP dataset.
