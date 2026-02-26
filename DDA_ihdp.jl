@@ -1,5 +1,5 @@
 # =============================================================================
-# File: DDA_ihdp_parallel.jl
+# File: DDA_ihdp.jl
 #
 # Parallel DDA for ATT Estimation Using IHDP Data (10 datasets)
 #
@@ -508,4 +508,5 @@ println("\n--- IHDP ALL RUNS COMPLETE ---")
 println("CSV saved as: ihdp_dda_all_results.csv")
 println("Summary CSV saved as: ihdp_dda_summary.csv")
 println("LaTeX saved as: ihdp_table.tex")
+
 
