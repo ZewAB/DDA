@@ -117,8 +117,8 @@ solver_input = length(ARGS) >= 1 ? ARGS[1] : "Mosek"
 
 results_df = run_all_solver(solver_input)
 
-final_tex = build_latex_table(results_df; outfile="$(lowercase(solver_input))_tableb.tex")
+final_tex = build_latex_table(results_df; outfile="$(lowercase(solver_input))_table.tex")
 
 println("\n--- SIMULATION COMPLETE ---")
-println("CSV saved as: $(lowercase(solver_input))_resultsb.csv")
-println("LaTeX saved as: $(lowercase(solver_input))_tableb.tex")
+println("CSV saved as: $(lowercase(solver_input))_results.csv")
+println("LaTeX saved as: $(lowercase(solver_input))_table.tex")
