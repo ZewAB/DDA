@@ -509,6 +509,3 @@ println("\n--- IHDP ALL RUNS COMPLETE ---")
 println("CSV saved as: ihdp_dda_all_results.csv")
 println("Summary CSV saved as: ihdp_dda_summary.csv")
 println("LaTeX saved as: ihdp_table.tex")
-
-
-
