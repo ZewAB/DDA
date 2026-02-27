@@ -7,6 +7,7 @@
 #        - COSMO (open-source)
 #        - Mosek (commercial; free academic license available)
 #        - COPT  (commercial; free academic license available)
+#        - IPOPT (open-source)
 # - For each solver: processes datasets i=1..10 in PARALLEL via pmap
 # - End-to-end timing per dataset:
 #   Scaling -> Weights (QP solver) -> BO Tuning -> Final Inference
@@ -508,5 +509,6 @@ println("\n--- IHDP ALL RUNS COMPLETE ---")
 println("CSV saved as: ihdp_dda_all_results.csv")
 println("Summary CSV saved as: ihdp_dda_summary.csv")
 println("LaTeX saved as: ihdp_table.tex")
+
 
 
