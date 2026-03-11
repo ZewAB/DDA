@@ -160,20 +160,19 @@ function build_table2_table3(rows::DataFrame; outfile2::AbstractString="sim1_tab
         isempty(sub) && error("Missing row: method=$method b_setting=$bset delta_setting=$dset")
         return sub[1, :]
     end
-
     # ---- TABLE 2 ----
     io2 = IOBuffer()
     println(io2, raw"\begin{table}[ht]")
     println(io2, raw"\centering")
-    println(io2, raw"{\small")
+    println(io2, raw"\tiny")
     println(io2, raw"\caption{(SIM1) RMSE, average time per iteration (T/Iter (s)), and total time (Tot.T (s)) for DDA using dense and harmonic $b$ settings. Bold values indicate best performance.}")
     println(io2, raw"\begin{tabular}{|l|ccc|ccc|ccc|ccc|}")
     println(io2, raw"\hline")
-    println(io2, raw"\shortstack{b Setting\\$\delta$ Setting} & \multicolumn{6}{c|}{dense} & \multicolumn{6}{c|}{harmonic} \\")
+    println(io2, raw"\shortstack{b Setting\\$\delta$ Setting} & \multicolumn{6}{c|}{dense} & \multicolumn{6}{c|}{harmonic} \\\\")
     println(io2, raw"\cline{2-13}")
-    println(io2, raw" & \multicolumn{3}{c|}{dense} & \multicolumn{3}{c|}{sparse} & \multicolumn{3}{c|}{dense} & \multicolumn{3}{c|}{sparse} \\")
+    println(io2, raw" & \multicolumn{3}{c|}{dense} & \multicolumn{3}{c|}{sparse} & \multicolumn{3}{c|}{dense} & \multicolumn{3}{c|}{sparse} \\\\")
     println(io2, raw"\cline{2-13}")
-    println(io2, raw" & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T \\")
+    println(io2, raw" & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T \\\\")
     println(io2, raw"\hline")
 
     mins2 = Dict{Tuple{String,String},Tuple{Float64,Float64,Float64}}()
@@ -198,13 +197,12 @@ function build_table2_table3(rows::DataFrame; outfile2::AbstractString="sim1_tab
             cell3(r_ds.RMSE, rmse_ds), " & ", cell3(r_ds.TIter, titer_ds), " & ", cell3(r_ds.TotT, tot_ds), " & ",
             cell3(r_hd.RMSE, rmse_hd), " & ", cell3(r_hd.TIter, titer_hd), " & ", cell3(r_hd.TotT, tot_hd), " & ",
             cell3(r_hs.RMSE, rmse_hs), " & ", cell3(r_hs.TIter, titer_hs), " & ", cell3(r_hs.TotT, tot_hs),
-            raw" \\"
+            raw" \\\\"
         )
     end
 
     println(io2, raw"\hline")
     println(io2, raw"\end{tabular}")
-    println(io2, raw"}")
     println(io2, raw"\end{table}")
     open(outfile2, "w") do f
         write(f, String(take!(io2)))
@@ -214,15 +212,15 @@ function build_table2_table3(rows::DataFrame; outfile2::AbstractString="sim1_tab
     io3 = IOBuffer()
     println(io3, raw"\begin{table}[ht]")
     println(io3, raw"\centering")
-    println(io3, raw"{\tiny")
+    println(io3, raw"\tiny")
     println(io3, raw"\caption{(SIM1) RMSE, average time per iteration (T/Iter (s)), and total time (Tot.T (s)) for DDA using moderately sparse and very sparse $b$ settings. Bold values indicate best performance.}")
     println(io3, raw"\begin{tabular}{|l|ccc|ccc|ccc|ccc|}")
     println(io3, raw"\hline")
-    println(io3, raw"\shortstack{b Setting\\$\delta$ Setting} & \multicolumn{6}{c|}{moderately sparse} & \multicolumn{6}{c|}{very sparse} \\")
+    println(io3, raw"\shortstack{b Setting\\$\delta$ Setting} & \multicolumn{6}{c|}{moderately sparse} & \multicolumn{6}{c|}{very sparse} \\\\")
     println(io3, raw"\cline{2-13}")
-    println(io3, raw" & \multicolumn{3}{c|}{Dense} & \multicolumn{3}{c|}{sparse} & \multicolumn{3}{c|}{dense} & \multicolumn{3}{c|}{sparse} \\")
+    println(io3, raw" & \multicolumn{3}{c|}{Dense} & \multicolumn{3}{c|}{sparse} & \multicolumn{3}{c|}{dense} & \multicolumn{3}{c|}{sparse} \\\\")
     println(io3, raw"\cline{2-13}")
-    println(io3, raw" & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T \\")
+    println(io3, raw" & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T & RMSE & T/Iter & Tot.T \\\\")
     println(io3, raw"\hline")
 
     mins3 = Dict{Tuple{String,String},Tuple{Float64,Float64,Float64}}()
@@ -247,13 +245,12 @@ function build_table2_table3(rows::DataFrame; outfile2::AbstractString="sim1_tab
             cell3(r_ms.RMSE, rmse_ms), " & ", cell3(r_ms.TIter, titer_ms), " & ", cell3(r_ms.TotT, tot_ms), " & ",
             cell3(r_vd.RMSE, rmse_vd), " & ", cell3(r_vd.TIter, titer_vd), " & ", cell3(r_vd.TotT, tot_vd), " & ",
             cell3(r_vs.RMSE, rmse_vs), " & ", cell3(r_vs.TIter, titer_vs), " & ", cell3(r_vs.TotT, tot_vs),
-            raw" \\"
+            raw" \\\\"
         )
     end
 
     println(io3, raw"\hline")
     println(io3, raw"\end{tabular}")
-    println(io3, raw"}")
     println(io3, raw"\end{table}")
     open(outfile3, "w") do f
         write(f, String(take!(io3)))
@@ -261,7 +258,6 @@ function build_table2_table3(rows::DataFrame; outfile2::AbstractString="sim1_tab
 
     return nothing
 end
-
 # ------------------------- EXEC -------------------------
 seed = 12345
 n = 500
