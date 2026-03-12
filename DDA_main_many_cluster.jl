@@ -357,9 +357,9 @@ function main(
 
     # FIXED tau_clust for this (n, p, eps, b_setup)
     # DGP: tau_clust = tau * rand(Exponential(1.0), nclust)
-    # Here tau = 1 ⇒ scaling omitted
+    tau = 1
     Random.seed!(seed)
-    tau_clust = rand(Exponential(1.0), nclust)
+    tau_clust = tau * rand(Exponential(1.0), nclust)
 
     println("\n" * "="^45)
     println("STARTING PARALLEL SIMULATION (n=$n, p=$p, Reps=$n_rep)")
