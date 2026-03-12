@@ -87,7 +87,7 @@ function build_latex_table(rows::DataFrame; method_name="DDA", outfile="table.te
     println(io, raw"\hline")
     println(io, raw"$n$ & $p$ & Method & \multicolumn{2}{c|}{$b_j \propto \mathbf{1}(j \le 10)$} & \multicolumn{2}{c|}{$b_j \propto 1/j^2$} & \multicolumn{2}{c|}{$b_j \propto 1/j$} \\\\")
     
-    println(io, raw" & & & $\varrho=0.25$ & $\varrho=0.1$ & $\varrho=0.25$ & $\varrho=0.1$ & $\varrho=0.25$ & $\varrho=0.1$ \\\\ \hline")
+    println(io, raw" & & & $\varrho=0.25$ & $\varrho=0.1$ & $\varrho=0.25$ & $\varrho=0.1$ & $\varrho=0.25$ & $\varrho=0.1$ \\ \hline")
 
     for i in 1:nrow(np_pairs)
         n, p = np_pairs.n[i], np_pairs.p[i]
